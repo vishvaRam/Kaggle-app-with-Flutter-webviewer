@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:kaggle/Providers/BookmarkProvider.dart';
+import 'package:kaggle/Providers/DataBase.dart';
 import 'package:kaggle/Providers/LoadingProvider.dart';
 import 'package:kaggle/Widgets/BottomAppBar.dart';
 import 'package:kaggle/Widgets/WebPager.dart';
@@ -98,6 +100,8 @@ class BottomNavBarR extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var bookMarkProvider = Provider.of<BookMarkProvider>(context,listen: false);
+
     return Material(
       elevation: 50,
       child: Container(
@@ -122,11 +126,16 @@ class BottomNavBarR extends StatelessWidget {
                   navigate(context, snapshot.data!, goBack: false),
             ),
             IconButton(
-                onPressed: !webViewReady ? null : () {},
+                onPressed: !webViewReady ? null : () async {
+                  var res = await snapshot.data!.currentUrl();
+                  bookMarkProvider.insertList(res!);
+                },
                 icon: Icon(Icons.bookmark_border)),
             IconButton(
                 onPressed: !webViewReady ? null : () async{
-                  Share.share('check out this kaggle blog! ${ await snapshot.data!.currentUrl()}');
+                  // bookMarkProvider.deleteListItem(0);
+                  bookMarkProvider.getList();
+                  // Share.share('check out this kaggle blog! ${ await snapshot.data!.currentUrl()}');
                 },
                 icon: Icon(Icons.share)),
             PopMenu(snapshot: snapshot,),
@@ -146,6 +155,8 @@ class PopMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var bookMarkProvider = Provider.of<BookMarkProvider>(context,listen: false);
+
     return PopupMenuButton(
       elevation: 12,
       onSelected: (keyWord) async{
@@ -153,6 +164,15 @@ class PopMenu extends StatelessWidget {
         switch(keyWord){
           case "RL": snapshot.data!.reload();
           break;
+          case 'SB':
+            var res = await bookMarkProvider.getList();
+            if(res != null){
+              for(var i in res){
+                print(i.id);
+                print(i.link);
+              }
+            }
+            break;
           case "OWB": if (await canLaunch(url!)) {
             await launch(
               url,

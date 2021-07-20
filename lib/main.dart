@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:kaggle/Providers/BookmarkProvider.dart';
 import 'package:kaggle/Providers/LoadingProvider.dart';
 import 'package:kaggle/Screens/Home.dart';
 import 'package:provider/provider.dart';
@@ -10,7 +11,8 @@ import 'package:webview_flutter/webview_flutter.dart';
 void main() {
   runApp(MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_)=>LoadingProvider())
+        ChangeNotifierProvider(create: (_)=>LoadingProvider()),
+        ChangeNotifierProvider(create: (_)=>BookMarkProvider()),
       ],
       child: Main()));
 } 

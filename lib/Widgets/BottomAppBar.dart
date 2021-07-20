@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-
-
 navigate(BuildContext context, WebViewController controller,
     {bool goBack: false}) async {
   bool canNavigate =
