@@ -76,7 +76,6 @@ class TodoProvider {
       return res;
     }
     catch (e){
-      print("inserter");
       print(e);
     }
   }

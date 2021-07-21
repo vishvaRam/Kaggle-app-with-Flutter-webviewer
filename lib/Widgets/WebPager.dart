@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:kaggle/Providers/BookmarkProvider.dart';
 import 'package:kaggle/Providers/LoadingProvider.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
@@ -24,9 +25,14 @@ class _WebPagerState extends State<WebPager> {
   bool isLoading = false;
 
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     var loadingProvider = Provider.of<LoadingProvider>(context,listen: false);
-    print("Loading : "+ isLoading.toString());
+    var bookMarkProvider = Provider.of<BookMarkProvider>(context,listen: false);
     return Positioned(
       top: 0,
       child: Builder(
@@ -48,19 +54,33 @@ class _WebPagerState extends State<WebPager> {
                 },
                 onPageStarted: (va){
                  loadingProvider.setLoading(true);
+                 print("Loading New page");
                 },
                 onPageFinished: (va){
                   loadingProvider.setLoading(false);
                 },
                 onProgress: (value) {
                   loadingProvider.setLoading(true);
-                  print("From Provider :"+loadingProvider.progress.toString());
                   loadingProvider.setProgress(value);
                   if(loadingProvider.progress == 100){
                     loadingProvider.reSetProgress();
                     loadingProvider.setLoading(false);
+                    getList() async{
+                      var res = await bookMarkProvider.getList();
+                      var controller = await widget.controller.future ;
+                      var link = await controller.currentUrl();
+                      if(res != null) {
+                        res.forEach((element) {
+                          if(element.link == link){
+                            bookMarkProvider.toggleIsBookmark(true);
+                          }else{
+                            bookMarkProvider.toggleIsBookmark(false);
+                          }
+                        });
+                      }
+                    }
+                    getList();
                   }
-                  print(loadingProvider.progress);
                 },
               ),
             ),

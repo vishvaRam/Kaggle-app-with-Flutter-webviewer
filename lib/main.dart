@@ -42,7 +42,6 @@ class _MainState extends State<Main> {
         debugShowCheckedModeBanner: false,
         home: Home(),
       ),
-
     );
   }
 }
