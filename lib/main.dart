@@ -40,7 +40,7 @@ class _MainState extends State<Main> {
       builder:()=> MaterialApp(
         title: "Kaggle",
         debugShowCheckedModeBanner: false,
-        home: Home(),
+        home: Home(url: "https://www.kaggle.com/",),
       ),
     );
   }

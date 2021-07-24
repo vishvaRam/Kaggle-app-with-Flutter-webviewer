@@ -13,13 +13,16 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_screenutil: ^5.0.0+2
-  url_launcher: ^6.0.9
+  url_launcher: any
   webview_flutter: ^2.0.10
   provider: ^5.0.0
   share: ^2.0.4
   sqflite: ^2.0.0+3
-  flutter_link_previewer: ^2.2.1
+  flutter_link_preview: ^1.5.6
+  cached_network_image: any
   path_provider: ^2.0.2
+  animations: ^2.0.1
+  flutter_svg: ^0.22.0
 
 dev_dependencies:
   flutter_test:
@@ -30,8 +33,8 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
+  assets:
+    - Assets/happy.svg
   #   - images/a_dot_ham.jpeg
 
   # fonts:

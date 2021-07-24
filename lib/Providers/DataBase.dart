@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:sqflite/sql.dart';
 
 
 final String columnId = '_id';
@@ -18,7 +19,7 @@ class Data{
 
   Map<String , dynamic> toMap (){
     return{
-      "id":id,
+      "_id":id,
       "link":columnLink,
     };
   }
@@ -57,7 +58,7 @@ class TodoProvider {
   Future _onCreate(Database db, int version) async {
     await db.execute('''
           CREATE TABLE $tableName (
-            $columnId INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            $columnId INTEGER PRIMARY KEY,
             $columnLink TEXT NOT NULL
           )
           ''');
@@ -67,6 +68,9 @@ class TodoProvider {
   Future<int?> insert(String data) async {
     try{
       final db = await instance.database;
+      // int?  count = Sqflite.firstIntValue(
+      //     await db.rawQuery("SELECT COUNT(*) FROM $tableName WHERE $columnLink=$data"));
+      // return count;
       print("Trying to insert");
       Map<String, dynamic> values = {
         "link": data,
@@ -92,7 +96,7 @@ class TodoProvider {
             result.length,
                 (i){
               return Data(
-                  id: result[i]['id'],
+                  id: result[i]['_id'],
                   link: result[i]['link'],
               );
             }
@@ -104,10 +108,10 @@ class TodoProvider {
 
   }
 
-  Future<int?> delete(int id) async {
+  Future<int?> delete(String link) async {
     try{
       final db = await instance.database;
-      return await db.delete(tableName, where: '$columnId = ?', whereArgs: [id]);
+      return await db.delete(tableName, where: '$columnLink = ?', whereArgs: [link]);
     }catch(e){
       print(e);
     }

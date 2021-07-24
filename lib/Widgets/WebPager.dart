@@ -9,21 +9,17 @@ import 'package:webview_flutter/webview_flutter.dart';
 class WebPager extends StatefulWidget {
    WebPager({
     Key? key,
-    required this.size,
-    required this.controller
+    required this.controller,required this.url
   }) : super(key: key);
   Completer<WebViewController> controller =
   Completer<WebViewController>();
-  final Size size;
+  final String url;
 
   @override
   _WebPagerState createState() => _WebPagerState();
 }
 
 class _WebPagerState extends State<WebPager> {
-  final String url = "https://www.kaggle.com/";
-  bool isLoading = false;
-
   @override
   void initState() {
     super.initState();
@@ -39,15 +35,16 @@ class _WebPagerState extends State<WebPager> {
         builder:(BuildContext context)=> Stack(
           children: [
             Container(
-              height: widget.size.height,
-              width: widget.size.width,
+              height: MediaQuery.of(context).size.height,
+              width: MediaQuery.of(context).size.width,
               child: WebView(
+                key: Key("home"),
                 userAgent:  Platform.isIOS ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_1_2 like Mac OS X) AppleWebKit/605.1.15' +
                     ' (KHTML, like Gecko) Version/13.0.1 Mobile/15E148 Safari/604.1' :
                 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) ' +
                     'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Mobile Safari/537.36',
                 javascriptMode: JavascriptMode.unrestricted,
-                initialUrl: url,
+                initialUrl: widget.url,
                 allowsInlineMediaPlayback: true,
                 onWebViewCreated: (WebViewController webViewController) {
                   widget.controller.complete(webViewController);
@@ -56,8 +53,22 @@ class _WebPagerState extends State<WebPager> {
                  loadingProvider.setLoading(true);
                  print("Loading New page");
                 },
-                onPageFinished: (va){
+                onPageFinished: (link){
                   loadingProvider.setLoading(false);
+                  getList() async{
+                    var res = await bookMarkProvider.getList();
+                    print("Link : "+ link);
+                    if(res != null){
+                      for(int i =0;i<res.length;i++){
+                        if (res[i].link == link) {
+                          bookMarkProvider.toggleIsBookmark(true);
+                        } else {
+                          bookMarkProvider.toggleIsBookmark(false);
+                        }
+                      }
+                    }
+                  }
+                  getList();
                 },
                 onProgress: (value) {
                   loadingProvider.setLoading(true);
@@ -66,17 +77,18 @@ class _WebPagerState extends State<WebPager> {
                     loadingProvider.reSetProgress();
                     loadingProvider.setLoading(false);
                     getList() async{
-                      var res = await bookMarkProvider.getList();
+                      await bookMarkProvider.getList();
                       var controller = await widget.controller.future ;
                       var link = await controller.currentUrl();
-                      if(res != null) {
-                        res.forEach((element) {
-                          if(element.link == link){
+                      print("Link : "+ link!);
+                      if(bookMarkProvider.bookmarksList != null){
+                        for(int i =0;i<bookMarkProvider.bookmarksList!.length;i++){
+                          if (bookMarkProvider.bookmarksList![i].link == link) {
                             bookMarkProvider.toggleIsBookmark(true);
-                          }else{
+                          } else {
                             bookMarkProvider.toggleIsBookmark(false);
                           }
-                        });
+                        }
                       }
                     }
                     getList();
@@ -86,8 +98,8 @@ class _WebPagerState extends State<WebPager> {
             ),
             Consumer<LoadingProvider>(
               builder:(context, isLoading,child)=> Container(
-                height: widget.size.height,
-                width: widget.size.width,
+                height: MediaQuery.of(context).size.height,
+                width:MediaQuery.of(context).size.width,
                 child: Center(
                   child: isLoading.isLoading ? CircularProgressIndicator():Container(),
                 ),

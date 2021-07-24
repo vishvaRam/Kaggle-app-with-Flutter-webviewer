@@ -16,19 +16,25 @@ class BookMarkProvider extends ChangeNotifier{
   toggleIsBookmark(bool value){
     _isBookmarked = value;
     notifyListeners();
+    print("Is Bookmarked : "+ _isBookmarked.toString());
   }
 
   Future<List<Data>?> getList() async{
     var res = await dbHelper.queryAll();
+    _bookmarksList = res;
+    notifyListeners();
     return res;
   }
 
-   insertList(String link) async{
-    var res = await dbHelper.insert(link);
+  insertList(String link) async{
+      await dbHelper.insert(link);
+      await getList();
   }
 
-  deleteListItem(int id) async{
-    var res = await dbHelper.delete(id);
+  deleteListItem(String link) async{
+    await dbHelper.delete(link);
+    await getList();
+    print("Deleted!");
   }
 
 }

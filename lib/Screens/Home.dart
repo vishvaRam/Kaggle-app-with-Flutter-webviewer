@@ -1,8 +1,9 @@
 import 'dart:async';
+import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:kaggle/Providers/BookmarkProvider.dart';
-import 'package:kaggle/Providers/LoadingProvider.dart';
+import 'package:kaggle/Screens/Bookmarks.dart';
 import 'package:kaggle/Widgets/BottomAppBar.dart';
 import 'package:kaggle/Widgets/WebPager.dart';
 import 'package:provider/provider.dart';
@@ -10,21 +11,40 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class Home extends StatefulWidget {
-  const Home({Key? key}) : super(key: key);
-
+  const Home({Key? key,required this.url}) : super(key: key);
+final String url;
   @override
   _HomeState createState() => _HomeState();
 }
 
-final Completer<WebViewController> _controller = Completer<WebViewController>();
-WebViewController? controllerGlobal;
+
 
 class _HomeState extends State<Home> {
+  final Completer<WebViewController> _controller = Completer<WebViewController>();
+  WebViewController? controllerGlobal;
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+      getList() async {
+        var bookMarkProvider =
+            Provider.of<BookMarkProvider>(context, listen: false);
+        await bookMarkProvider.getList();
+        if (bookMarkProvider.bookmarksList != null) {
+          bookMarkProvider.bookmarksList!.forEach((element) {
+            print(element.link);
+          });
+        } else {
+          print("Empty");
+        }
+      }
+
+      getList();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    var size = MediaQuery.of(context).size;
-    var loadingProvider = Provider.of<LoadingProvider>(context, listen: false);
-    print(loadingProvider.isLoading);
     return WillPopScope(
       onWillPop: () => _exitApp(context),
       child: SafeArea(
@@ -32,8 +52,8 @@ class _HomeState extends State<Home> {
         body: Stack(
           children: [
             WebPager(
-              size: size,
               controller: _controller,
+               url: widget.url,
             ),
             Positioned(
               bottom: 0,
@@ -41,7 +61,7 @@ class _HomeState extends State<Home> {
                   future: _controller.future,
                   builder: (BuildContext context,
                       AsyncSnapshot<WebViewController> snapshot) {
-                    if (!snapshot.hasData) return Container();
+                    if (!snapshot.hasData) return SizedBox();
                     final bool webViewReady =
                         snapshot.connectionState == ConnectionState.done;
                     controllerGlobal = snapshot.data;
@@ -64,7 +84,10 @@ class _HomeState extends State<Home> {
       showDialog(
           context: context,
           builder: (context) => AlertDialog(
-                title: Text('Finished already?',style: TextStyle(fontSize: 24),),
+                title: Text(
+                  'Finished already?',
+                  style: TextStyle(fontSize: 24),
+                ),
                 content: Text("Are you sure you want to quit?"),
                 actions: <Widget>[
                   TextButton(
@@ -74,11 +97,16 @@ class _HomeState extends State<Home> {
                     child: Text('Cancel'),
                   ),
                   TextButton(
-                    style: ButtonStyle(backgroundColor: MaterialStateProperty.all(Colors.lightBlue[50])),
+                    style: ButtonStyle(
+                        backgroundColor:
+                            MaterialStateProperty.all(Colors.blue)),
                     onPressed: () {
                       SystemNavigator.pop();
                     },
-                    child: Text('Quit',style: TextStyle(color: Colors.blue),),
+                    child: Text(
+                      'Quit',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ],
               ));
@@ -102,30 +130,6 @@ class BottomNavBarR extends StatefulWidget {
 }
 
 class _BottomNavBarRState extends State<BottomNavBarR> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-      var bookMarkProvider =
-          Provider.of<BookMarkProvider>(context, listen: false);
-      getList() async {
-        var res = await bookMarkProvider.getList();
-        var link = await widget.snapshot.data!.currentUrl();
-        if (res != null) {
-          res.forEach((element) {
-            if (element.link == link) {
-              bookMarkProvider.toggleIsBookmark(true);
-            } else {
-              bookMarkProvider.toggleIsBookmark(false);
-            }
-          });
-        }
-      }
-
-      getList();
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     var bookMarkProvider =
@@ -156,7 +160,15 @@ class _BottomNavBarRState extends State<BottomNavBarR> {
             ),
             Consumer<BookMarkProvider>(
                 builder: (context, p, _) => IconButton(
-                    onPressed: () {
+                    onPressed: () async {
+                      var res = await widget.snapshot.data!.currentUrl();
+                      if(p.isBookmarked == false){
+                        p.insertList(res!);
+                        print("Inserted");
+                      }else{
+                        p.deleteListItem(res!);
+                        print("Deleted");
+                      }
                       p.toggleIsBookmark(!p.isBookmarked);
                     },
                     icon: p.isBookmarked
@@ -166,8 +178,13 @@ class _BottomNavBarRState extends State<BottomNavBarR> {
                 onPressed: !widget.webViewReady
                     ? null
                     : () async {
-                        // bookMarkProvider.deleteListItem(0);
-                        bookMarkProvider.getList();
+                        if(bookMarkProvider.bookmarksList != null){
+                          bookMarkProvider.bookmarksList!.forEach((element) {
+                            print(element.id.toString()+" : "+element.link.toString());
+                          });
+                        }else{
+                          print("Empty");
+                        }
                         // Share.share('check out this kaggle blog! ${ await snapshot.data!.currentUrl()}');
                       },
                 icon: Icon(Icons.share)),
@@ -189,10 +206,11 @@ class PopMenu extends StatelessWidget {
 
   final AsyncSnapshot<WebViewController> snapshot;
 
+  final ContainerTransitionType _containerTransitionType =
+      ContainerTransitionType.fadeThrough;
+
   @override
   Widget build(BuildContext context) {
-    var bookMarkProvider =
-        Provider.of<BookMarkProvider>(context, listen: false);
 
     return PopupMenuButton(
       elevation: 12,
@@ -201,14 +219,6 @@ class PopMenu extends StatelessWidget {
         switch (keyWord) {
           case "RL":
             snapshot.data!.reload();
-            break;
-          case 'SB':
-            var res = await bookMarkProvider.getList();
-            if (res != null) {
-              res.forEach((element) {
-                print(element.link);
-              });
-            }
             break;
           case "OWB":
             if (await canLaunch(url!)) {
@@ -243,14 +253,25 @@ class PopMenu extends StatelessWidget {
         PopupMenuItem<String>(
           value: 'OWB',
           child: ListTile(
+            onTap: (){},
             title: Text("Open in Browser"),
             trailing: Icon(Icons.open_in_new),
           ),
         ),
         PopupMenuItem<String>(
-          value: 'SB',
-          child: ListTile(
-            title: Text("See Bookmarks"),
+          child: OpenContainer(
+            tappable: false,
+            openElevation: 20,
+            closedElevation: 0,
+            transitionType: _containerTransitionType,
+            transitionDuration: Duration(milliseconds: 400),
+            openBuilder: (context,_)=> Bookmarks(),
+           closedBuilder: (context,VoidCallback openContainer)=>ListTile(
+             onTap: (){
+               openContainer();
+             },
+             title: Text("See Bookmarks"),
+           ),
           ),
         ),
       ],
