@@ -19,7 +19,7 @@
     </queries>
     <uses-permission android:name="android.permission.INTERNET" />
    <application
-        android:label="kaggle"
+        android:label="Kagglite"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
