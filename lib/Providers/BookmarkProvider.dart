@@ -1,23 +1,16 @@
+import 'package:error_notifier_for_provider/error_notifier_for_provider.dart';
 import 'package:flutter/material.dart';
 import 'DataBase.dart';
 
 
-class BookMarkProvider extends ChangeNotifier{
+class BookMarkProvider extends ChangeNotifier with ErrorNotifierMixin {
   List<Data>? _bookmarksList;
-  bool _isBookmarked = false;
   final dbHelper = TodoProvider.instance;
-
-  bool get isBookmarked => _isBookmarked;
 
   List<Data>? get bookmarksList{
     return _bookmarksList;
   }
 
-  toggleIsBookmark(bool value){
-    _isBookmarked = value;
-    notifyListeners();
-    print("Is Bookmarked : "+ _isBookmarked.toString());
-  }
 
   Future<List<Data>?> getList() async{
     var res = await dbHelper.queryAll();
@@ -27,7 +20,19 @@ class BookMarkProvider extends ChangeNotifier{
   }
 
   insertList(String link) async{
+      await getList();
+      if(_bookmarksList != null){
+        for(var i in _bookmarksList!){
+          if(i.link == link){
+            print("Already There!");
+            notifyError("Already Bookmarked!");
+            return;
+          }
+        }
+      }
       await dbHelper.insert(link);
+      print("Inserted!");
+      notifyError("Added to bookmarked");
       await getList();
   }
 

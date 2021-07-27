@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:kaggle/Providers/BookmarkProvider.dart';
 import 'package:kaggle/Providers/LoadingProvider.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
@@ -28,7 +27,6 @@ class _WebPagerState extends State<WebPager> {
   @override
   Widget build(BuildContext context) {
     var loadingProvider = Provider.of<LoadingProvider>(context,listen: false);
-    var bookMarkProvider = Provider.of<BookMarkProvider>(context,listen: false);
     return Positioned(
       top: 0,
       child: Builder(
@@ -55,20 +53,6 @@ class _WebPagerState extends State<WebPager> {
                 },
                 onPageFinished: (link){
                   loadingProvider.setLoading(false);
-                  getList() async{
-                    var res = await bookMarkProvider.getList();
-                    print("Link : "+ link);
-                    if(res != null){
-                      for(int i =0;i<res.length;i++){
-                        if (res[i].link == link) {
-                          bookMarkProvider.toggleIsBookmark(true);
-                        } else {
-                          bookMarkProvider.toggleIsBookmark(false);
-                        }
-                      }
-                    }
-                  }
-                  getList();
                 },
                 onProgress: (value) {
                   loadingProvider.setLoading(true);
@@ -76,22 +60,6 @@ class _WebPagerState extends State<WebPager> {
                   if(loadingProvider.progress == 100){
                     loadingProvider.reSetProgress();
                     loadingProvider.setLoading(false);
-                    getList() async{
-                      await bookMarkProvider.getList();
-                      var controller = await widget.controller.future ;
-                      var link = await controller.currentUrl();
-                      print("Link : "+ link!);
-                      if(bookMarkProvider.bookmarksList != null){
-                        for(int i =0;i<bookMarkProvider.bookmarksList!.length;i++){
-                          if (bookMarkProvider.bookmarksList![i].link == link) {
-                            bookMarkProvider.toggleIsBookmark(true);
-                          } else {
-                            bookMarkProvider.toggleIsBookmark(false);
-                          }
-                        }
-                      }
-                    }
-                    getList();
                   }
                 },
               ),

@@ -8,13 +8,13 @@ navigate(BuildContext context, WebViewController controller,
   if (canNavigate) {
     goBack ? controller.goBack() : controller.goForward();
   } else {
-    Scaffold.of(context).showSnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
           duration: Duration(seconds: 2),
           behavior: SnackBarBehavior.floating,
           margin: EdgeInsets.only(
               bottom: kBottomNavigationBarHeight, right: 10, left: 10),
-          content: Text("No ${goBack ? 'back' : 'forward'} history item")),
-    );
+          content: Text("No ${goBack ? 'back' : 'forward'} history item")));
+
   }
 }

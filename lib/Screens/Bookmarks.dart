@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:kaggle/Providers/BookmarkProvider.dart';
 import 'package:kaggle/Screens/BookMarkViewer.dart';
+import 'package:kaggle/Widgets/ErrorWidget.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import "package:flutter_link_preview/flutter_link_preview.dart";
+import 'package:share/share.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class Bookmarks extends StatefulWidget {
@@ -25,15 +26,12 @@ class _BookmarksState extends State<Bookmarks> {
             Provider.of<BookMarkProvider>(context, listen: false);
         await bookMarkProvider.getList();
       }
-
       getList();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    var bookMarkProvider =
-        Provider.of<BookMarkProvider>(context, listen: false);
     return SafeArea(
       child: Scaffold(
         backgroundColor: Colors.white,
@@ -44,7 +42,7 @@ class _BookmarksState extends State<Bookmarks> {
                   elevation: 12,
                   floating: true,
                   iconTheme: IconThemeData(color: Colors.black),
-                  expandedHeight: 150.h,
+                  expandedHeight: 200.h,
                   backgroundColor: Colors.white,
                   pinned: true,
                   flexibleSpace: FlexibleSpaceBar(
@@ -82,6 +80,7 @@ class ListOfLinks extends StatelessWidget {
     return SliverList(
       delegate: SliverChildBuilderDelegate(
         (context, index) => FlutterLinkPreview(
+          key: Key(bookMarkProvider.bookmarksList![index].link.toString()),
           url: bookMarkProvider.bookmarksList![index].link,
           bodyStyle: TextStyle(
             fontSize: 16.sp,
@@ -140,9 +139,10 @@ class BookmarkCard extends StatelessWidget {
           openContainer();
         },
         child: Card(
+          elevation: 5,
           margin: EdgeInsets.symmetric(horizontal: 20.sp, vertical: 20.sp),
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
           clipBehavior: Clip.antiAlias,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -193,7 +193,7 @@ class BookmarkCard extends StatelessWidget {
                                   forceWebView: false,
                                 );
                               } else {
-                                Scaffold.of(context).showSnackBar(
+                                ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                       duration: Duration(seconds: 2),
                                       behavior: SnackBarBehavior.floating,
@@ -205,26 +205,41 @@ class BookmarkCard extends StatelessWidget {
                                 );
                               }
                               break;
-                            case 2 :  bookmarkProvider.deleteListItem(url);
+                            case 2 :
+                              Share.share('check out this kaggle blog! $url');
+
+                              break;
+                            case 3 :  bookmarkProvider.deleteListItem(url);
+                            break;
                           }
                         },
                         itemBuilder: (context) => [
                               PopupMenuItem(
                                 child: ListTile(
                                   title: Text("Open in browser"),
-                                  trailing: Icon(Icons.open_in_new),
+                                  trailing: Icon(
+                                    Icons.open_in_new,
+                                  ),
                                 ),
                                 value: 1,
+                              ),
+                              PopupMenuItem(
+                                child: ListTile(
+                                  title: Text("Share"),
+                                  trailing: Icon(
+                                    Icons.share,
+                                  ),
+                                ),
+                                value: 2,
                               ),
                               PopupMenuItem(
                                 child: ListTile(
                                   title: Text("Delete"),
                                   trailing: Icon(
                                     Icons.delete,
-                                    color: Colors.red[400],
                                   ),
                                 ),
-                                value: 2,
+                                value: 3,
                               ),
                             ])
                   ],
@@ -234,89 +249,5 @@ class BookmarkCard extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-class EmptyWidget extends StatelessWidget {
-  const EmptyWidget({
-    Key? key,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-        child: Center(
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 160.h, horizontal: 20.w),
-        child: Column(
-          children: [
-            SvgPicture.asset(
-              "Assets/happy.svg",
-              height: 200.h,
-            ),
-            SizedBox(
-              height: 30.h,
-            ),
-            Text(
-              "Add to Bookmark",
-              style: TextStyle(fontSize: 26.sp, fontWeight: FontWeight.w500),
-            ),
-            SizedBox(
-              height: 15.h,
-            ),
-            RichText(
-              text: TextSpan(
-                children: [
-                  TextSpan(
-                      text: "Use the bookmark icon ",
-                      style: TextStyle(
-                          color: Colors.black87,
-                          fontSize: 22.sp,
-                          fontWeight: FontWeight.normal)),
-                  WidgetSpan(
-                    style: TextStyle(fontSize: 22.sp),
-                    child: Icon(
-                      Icons.bookmark_border,
-                      color: Color(0xff536DFE),
-                    ),
-                  ),
-                  TextSpan(
-                      text: " to save.",
-                      style: TextStyle(
-                          color: Colors.black87,
-                          fontSize: 22.sp,
-                          fontWeight: FontWeight.normal)),
-                ],
-              ),
-            ),
-            SizedBox(
-              height: 30.h,
-            ),
-            TextButton(
-                style: ButtonStyle(
-                    backgroundColor:
-                        MaterialStateProperty.all<Color>(Colors.black),
-                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                        RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18.0),
-                    ))),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: Padding(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
-                  child: Text(
-                    "Explore",
-                    style: TextStyle(
-                        fontSize: 22.sp,
-                        color: Colors.white,
-                        letterSpacing: 1.5.sp),
-                  ),
-                ))
-          ],
-        ),
-      ),
-    ));
   }
 }
